@@ -1,5 +1,14 @@
 from ultralytics import YOLO
 
-model = YOLO('yolov8n.pt')
+model = YOLO("yolo11n-obb.pt")
 
-results = model("dental.jpeg", show=True, save=True)
+yaml_file = "/home/bato/PROJECTS/PROJECT-1/datasets/dataset/data.yaml"
+
+results = model.train(data=yaml_file, 
+                      epochs=100,  
+                      imgsz=640,
+                      project="teeth",
+                      name="YOLO11X-OBB",
+                      batch=16,
+                      device=0,
+                      val=True)
