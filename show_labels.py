@@ -1,15 +1,15 @@
 import cv2
 
-img = cv2.imread("datasets/dataset/train/images/599.jpg")
+img = cv2.imread("datasets/dataset/test/images/632.jpg")
 
-filename = "datasets/dataset/train/labels/599.txt"
+filename = "datasets/dataset/test/labels/632.txt"
 
 with open(filename, 'r') as file:
     labels = file.readlines()
 
 labels = [line.strip() for line in labels]
 
-label = labels[0]
+label = labels[2]
 points = [float(point) for point in label.split()]
 cv2.line(img,
             (int(points[1] * 2048), int(points[2] * 1024)), 
