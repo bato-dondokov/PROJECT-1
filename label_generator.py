@@ -5,27 +5,9 @@ import os
 import re
 
 class LabelGenerator():
-    def __init__(self, xray_dir, dataset_dir, w, h):
+    def __init__(self, xray_dir, dataset_dir):
         self.XRAY_DIR = xray_dir
         self.DATASET_DIR = dataset_dir
-        self.W = w
-        self.H = h
-
-
-    def find_vertices(self, center_point, farthest_point):
-        if center_point[1] > farthest_point[1]:
-            vertices = np.array([[center_point[0] + self.W//2, center_point[1] - int(self.H*0.6)],
-                                [center_point[0] + self.W//2, center_point[1] + int(self.H*0.4)],
-                                [center_point[0] - self.W//2, center_point[1] + int(self.H*0.4)],
-                                [center_point[0] - self.W//2, center_point[1] - int(self.H*0.6)]])
-            theta = (farthest_point[0] - center_point[0]) // 3
-        else:
-            vertices = np.array([[center_point[0] + self.W//2, center_point[1] - int(self.H*0.4)],
-                                [center_point[0] + self.W//2, center_point[1] + int(self.H*0.6)],
-                                [center_point[0] - self.W//2, center_point[1] + int(self.H*0.6)],
-                                [center_point[0] - self.W//2, center_point[1] - int(self.H*0.4)]])
-            theta = (farthest_point[0] - center_point[0]) // -3
-        return vertices, theta
 
 
     def rotate_point(self, vertex, center_point, theta):
@@ -57,6 +39,33 @@ class LabelGenerator():
                      thickness=2)
 
 
+    def find_rotation_angle(self, points, center, k):
+        distances = np.linalg.norm(points - center, axis=1)
+        max_distance_index = np.argmax(distances)
+        farthest_point = points[max_distance_index]
+
+        if center[1] < farthest_point[1]:
+            k *= -1
+        rotation_angle = (farthest_point[0] - center[0]) // k
+        return rotation_angle
+    
+
+    def find_vertices(self, center_point, rotation_angle, mask):
+                    rot_mat = cv2.getRotationMatrix2D((int(center_point[0]), int(center_point[1])), rotation_angle, 1.0)
+                    rotated_mask = cv2.warpAffine(mask * 255.0, rot_mat, mask.shape[1::-1], flags=cv2.INTER_LINEAR)
+                
+                    rotated_y, rotated_x = np.where(rotated_mask == 255.0)
+                    upper_point = min(rotated_y)
+                    lowest_point = max(rotated_y)
+                    left_point = min(rotated_x)
+                    right_point = max(rotated_x)
+                    vertices = np.array([(left_point, upper_point),
+                                         (right_point, upper_point),
+                                         (right_point, lowest_point),
+                                         (left_point, lowest_point)])
+                    return vertices
+
+
     def find_boxes(self, masks):
         boxes = []
         for i in range(masks.shape[2]-1):
@@ -65,29 +74,24 @@ class LabelGenerator():
             if len(y) != 0 and len(x) != 0:
                 points = np.array(list(zip(x, y)))
                 center_point = np.mean(points, axis=0).astype(int)
-                distances = np.linalg.norm(points - center_point, axis=1)
-                max_distance_index = np.argmax(distances)
-                farthest_point = points[max_distance_index]
-
-                vertices, theta = self.find_vertices(center_point, 
-                                                     farthest_point)
+                rotation_angle = self.find_rotation_angle(points=points, 
+                                                          center=center_point, 
+                                                          k=3)
+                vertices = self.find_vertices(center_point, 
+                                                rotation_angle, 
+                                                mask)
                 rotated_vertices = []
                 for vertex in vertices:
                     rotated_vertices.append(self.rotate_point(vertex,
                                                               center_point, 
-                                                              theta))
-                    
+                                                              rotation_angle))   
                 boxes.append(rotated_vertices)
-        return np.array(boxes)
-                # mask = mask * 255.0    
-                # self.draw_boxes(mask, rotated_vertices)
-                # cv2.circle(mask, 
-                #            center_point, 
-                #            radius=2, 
-                #            color=(0, 0, 0), 
-                #            thickness=2) 
-                # cv2.imshow('tooth', mask)
+                # print(i, rotation_angle)
+
+                # self.draw_boxes(image, rotated_vertices)
+                # cv2.imshow('image', image)
                 # cv2.waitKey(0)
+        return np.array(boxes)
 
 
     def save_labels(self, dir, image_id, boxes):
@@ -139,8 +143,6 @@ class LabelGenerator():
  
 if __name__ == "__main__":
     XRAY_DIR = sys.argv[1]
-    DATASET_DIR = "dataset/"
-    BOX_WIDTH = 200
-    BOX_HEIGH = 400
-    label_gen = LabelGenerator(XRAY_DIR, DATASET_DIR, BOX_WIDTH, BOX_HEIGH)
+    DATASET_DIR = "datasets/dataset"
+    label_gen = LabelGenerator(XRAY_DIR, DATASET_DIR)
     label_gen.process()

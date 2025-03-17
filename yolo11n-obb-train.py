@@ -6,9 +6,10 @@ yaml_file = "/home/bato/PROJECTS/PROJECT-1/datasets/dataset/data.yaml"
 
 results = model.train(data=yaml_file, 
                       epochs=100,  
-                      imgsz=640,
+                      imgsz=1024,
                       project="teeth",
-                      name="YOLO11X-OBB",
-                      batch=16,
+                      name="YOLO11nn-OBB",
+                      batch=8,
                       device=0,
-                      val=True)
+                      val=True,
+                      single_cls=True)
