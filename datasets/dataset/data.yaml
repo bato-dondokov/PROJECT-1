@@ -1,6 +1,0 @@
-train: /home/bato/PROJECTS/PROJECT-1/datasets/dataset/train/images
-val: /home/bato/PROJECTS/PROJECT-1/datasets/dataset/valid/images
-test: /home/bato/PROJECTS/PROJECT-1/datasets/dataset/test/images
-
-nc: 1
-names: ['Tooth']

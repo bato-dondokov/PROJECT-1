@@ -1,5 +1,8 @@
 from ultralytics import YOLO
 
-model = YOLO("results/YOLO11X-OBB7/weights/best.pt")
+model = YOLO("models/YOLO11m-OBB4(main)/weights/best.pt")
 
-model.predict("datasets/dataset/valid/images/649.jpg", save_txt=True)
+boxes = model("datasets/dataset/valid/images/650.jpg")
+print(boxes)
+
+#TO-DO: install ultralytics, extraxt teeth, git ingore
