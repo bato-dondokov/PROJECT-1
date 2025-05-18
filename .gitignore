@@ -1,5 +1,9 @@
-datasets
-np_data
-np_data_train
-xrays
-teeth_img
+detection/datasets
+detection/np_data
+detection/np_data_train
+detection/xrays
+detection/teeth_img
+
+bot/config.py
+
+**/__pycache__/
