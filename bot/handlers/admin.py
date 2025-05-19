@@ -8,7 +8,7 @@ import database.requests as rq
 from xray2img import Xray2Teeth
 
 from ultralytics import YOLO
-from handlers.paths import MODELS_DIR, XRAYS_DIR, TEETH_DIR
+from handlers.paths import MODELS_DIR, XRAYS_DIR, TEETH_DIR, DB_PATH
 
 
 admin_router = Router()
@@ -17,17 +17,22 @@ model = YOLO(MODELS_DIR / "YOLO11m-OBB4(main)/weights/best.pt")
 
 @admin_router.message(Administration.waiting_admin_command)
 async def get_admin_command(message: Message, state: FSMContext):
-    await state.update_data(admin_command=message.text)
-    data = await state.get_data()
-    print(data["admin_command"])
-    if data["admin_command"] == "Добавить класс разметки":
+    command = message.text
+    print(command)
+    if command == "Добавить класс разметки":
         await state.set_state(Administration.waiting_new_label_class)
         await message.answer('Введите название нового класса разметки',
                             reply_markup=kb.go_back)
-    elif data["admin_command"] == "Добавить снимок":
+    elif command == "Добавить снимок":
         await state.set_state(Administration.waiting_new_xray)
         await message.answer('Отправьте снимок.',
                             reply_markup=kb.go_back)
+    if command == "Выгрузить БД":
+        # await state.set_state(Administration.exporting_db)
+        db_file = FSInputFile(DB_PATH)
+        await message.answer_document(db_file, caption="БД выгружена успешно.")
+        await message.answer('Выберите нужную команду.')
+
     # TODO решить с кнопками
    
 
@@ -56,9 +61,10 @@ async def confirm_new_label_class(callback: CallbackQuery, state: FSMContext):
 
 
 @admin_router.callback_query(Administration.confirming_new_label_class,
-                       F.data == "back_admin_commands")
+                       F.data == "go_back")
 async def go_back_admin_commands(callback: CallbackQuery, state: FSMContext):
     await state.set_state(Administration.waiting_admin_command)
+    await callback.message.edit_reply_markup(reply_markup=None)
     await callback.message.answer('Выберите нужную команду.', reply_markup=kb.admin_commands)
 
 
@@ -76,18 +82,20 @@ async def get_xray(message: Message, state: FSMContext):
                         reply_markup=kb.confirming)
     
 
-@admin_router.callback_query(Administration.waiting_new_xray,
-                       F.data == "back_admin_commands")
-async def go_back_admin_commands(callback: CallbackQuery, state: FSMContext):
-    await state.set_state(Administration.waiting_admin_command)
-    await callback.message.answer('Выберите нужную команду.', reply_markup=kb.admin_commands)
+# @admin_router.callback_query(Administration.waiting_new_xray,
+#                        F.data == "go_back")
+# async def go_back_admin_commands(callback: CallbackQuery, state: FSMContext):
+#     print("yessss")
+#     await state.set_state(Administration.waiting_admin_command)
+#     await callback.message.edit_reply_markup(reply_markup=None)
+#     await callback.message.answer('Выберите нужную команду.', reply_markup=kb.admin_commands)
     
 
 @admin_router.callback_query(Administration.confirming_new_xray, 
                 F.data == "confirm")
 async def confirm_new_xray(callback: CallbackQuery, state: FSMContext, bot: Bot):
     await callback.message.edit_reply_markup(reply_markup=None)
-    await callback.message.answer(f'Снимок обрабатывается...')
+    await callback.message.answer('Снимок обрабатывается...')
     data = await state.get_data()
     photo_file = await bot.get_file(data["photo_id"])
     xray_name = photo_file.file_unique_id
@@ -105,7 +113,8 @@ async def confirm_new_xray(callback: CallbackQuery, state: FSMContext, bot: Bot)
 
 
 @admin_router.callback_query(Administration.confirming_new_xray,
-                       F.data == "back_admin_commands")
+                       F.data == "go_back")
 async def go_back_admin_commands(callback: CallbackQuery, state: FSMContext):
     await state.set_state(Administration.waiting_admin_command)
+    await callback.message.edit_reply_markup(reply_markup=None)
     await callback.message.answer('Выберите нужную команду.', reply_markup=kb.admin_commands)

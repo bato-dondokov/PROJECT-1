@@ -7,3 +7,4 @@ detection/teeth_img
 bot/config.py
 
 **/__pycache__/
+.DS_Store

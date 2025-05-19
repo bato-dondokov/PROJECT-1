@@ -49,8 +49,18 @@ async def confirm_label(callback: CallbackQuery, state: FSMContext):
     new_tooth_id = int(data["tooth_id"]) + 1
     await rq.set_user_current_tooth_id(tg_id=data["tg_id"],
                                        tooth_id=new_tooth_id)
-    print(new_tooth_id)
     await callback.message.edit_reply_markup(reply_markup=None)
     await state.set_state(Labelling.waiting_expert_command)
     await callback.message.answer(text=f'Снимок №{data["tooth_id"]}.\nРазметка успешно добавлена.',
                                   reply_markup=kb.label_next)
+    
+
+@expert_router.callback_query(Labelling.confirming_label, 
+                              F.data == "go_back")
+async def go_back(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(Labelling.waiting_label)
+    data = await state.get_data()
+    await callback.message.edit_caption(caption=f'Снимок №{data["tooth_id"]}.\n' \
+    'Выберите подходящий вариант разметки.',
+                                reply_markup=await kb.show_labels())
+

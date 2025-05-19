@@ -7,3 +7,4 @@ class Administration(StatesGroup):
     confirming_new_label_class = State()
     waiting_new_xray = State()
     confirming_new_xray = State()
+    exporting_db = State()

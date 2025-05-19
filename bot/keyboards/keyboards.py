@@ -15,8 +15,9 @@ main = ReplyKeyboardMarkup(keyboard=[
 
 
 admin_commands = ReplyKeyboardMarkup(keyboard=[
-    [KeyboardButton(text='Добавить класс разметки'),
-     KeyboardButton(text="Добавить снимок")]
+    [KeyboardButton(text='Добавить класс разметки')],
+    [KeyboardButton(text="Добавить снимок")],
+    [KeyboardButton(text="Выгрузить БД")]
 ],
                            resize_keyboard=True,
                            input_field_placeholder='Выберите нужную команду.')
@@ -24,7 +25,7 @@ admin_commands = ReplyKeyboardMarkup(keyboard=[
 
 confirming = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="Подтвердить", callback_data="confirm")],
-    [InlineKeyboardButton(text="Вернуться назад", callback_data="back_admin_commands")]
+    [InlineKeyboardButton(text="Вернуться назад", callback_data="go_back")]
 ])
 
 
