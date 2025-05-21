@@ -23,9 +23,15 @@ async def set_user_status(message: Message, state: FSMContext):
 @auth_router.message(Authentication.waiting_user_status)
 async def password_request(message: Message, state: FSMContext):
     await state.update_data(user_status=message.text)
-    await state.set_state(Authentication.waiting_password)
-    await message.reply('Введите пароль.\nЕсли выбрали не верный статус перезапустите бота командой /start',
-                        reply_markup=kb.keyboard_remove)
+    is_user_exist = await rq.check_user(message.from_user.id, message.text)
+    if message.text == "Эксперт" and is_user_exist:
+        await state.set_state(Labelling.waiting_expert_command)
+        await message.answer("Выберите команду.",
+                                reply_markup=kb.expert_commands)
+    else:
+        await state.set_state(Authentication.waiting_password)
+        await message.reply('Введите пароль.\nЕсли выбрали не верный статус перезапустите бота командой /start',
+                            reply_markup=kb.keyboard_remove)
 
 
 @auth_router.message(Authentication.waiting_password)
@@ -36,10 +42,10 @@ async def auth(message: Message, state: FSMContext):
         await rq.set_user(message.from_user.id, message.from_user.first_name, data["user_status"])
         await state.set_state(Labelling.waiting_expert_command)
         await message.answer("Выберите команду.",
-                             reply_markup=kb.start_labelling)
+                             reply_markup=kb.expert_commands)
     elif data["user_status"] == "Админ" and data["password"] == '222':
         await rq.set_user(message.from_user.id, message.from_user.first_name, data["user_status"])
         await state.set_state(Administration.waiting_admin_command)
-        await message.answer('Выберите нужную команду.', reply_markup=kb.admin_commands)
+        await message.answer('Выберите команду.', reply_markup=kb.admin_commands)
     else:
         await message.reply('Неверный пароль, введите еще раз.')

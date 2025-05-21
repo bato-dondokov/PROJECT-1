@@ -1,5 +1,5 @@
 from aiogram import F, Router, Bot
-from aiogram.types import Message, FSInputFile, CallbackQuery
+from aiogram.types import Message, FSInputFile, CallbackQuery, ReplyKeyboardRemove
 from aiogram.fsm.context import FSMContext
 
 import keyboards.keyboards as kb
@@ -11,21 +11,25 @@ expert_router = Router()
 
 
 @expert_router.message(Labelling.waiting_expert_command, 
-                       (F.text == "Начать разметку") | (F.text == "Разметить следующий снимок"))
+                       (F.text == "Начать разметку") | (F.data == "label_next"))
 async def start_labelling(message: Message, state: FSMContext):
+    await state.update_data(user_id=message.from_user.id)
     await state.set_state(Labelling.waiting_label)
 
     current_tooth_id = await rq.get_user_current_tooth_id(message.from_user.id)
+    await state.update_data(tooth_id=current_tooth_id)
     tooth_file_path = await rq.get_tooth(current_tooth_id)
 
-    await state.update_data(tg_id=message.from_user.id,
-                            tooth_id=current_tooth_id)
-
-    photo = FSInputFile(tooth_file_path)
-    await message.answer_photo(photo=photo,
-                                caption=f'Снимок №{current_tooth_id}.\n' \
-    'Выберите подходящий вариант разметки.',
-                                reply_markup=await kb.show_labels())
+    if not tooth_file_path:
+        await message.answer('Отуствуют данные для разметки.')
+    else:
+        photo = FSInputFile(tooth_file_path)
+        await message.answer(text="Снимок для разметки подргужается...",
+                            reply_markup=ReplyKeyboardRemove())
+        await message.answer_photo(photo=photo,
+                                    caption=f'Снимок №{current_tooth_id}.\n' \
+        'Выберите подходящий вариант разметки.',
+                                    reply_markup=await kb.show_labels())
 
 
 @expert_router.callback_query(Labelling.waiting_label,
@@ -43,11 +47,12 @@ async def get_label(callback: CallbackQuery, state: FSMContext):
                               F.data == "confirm")
 async def confirm_label(callback: CallbackQuery, state: FSMContext):
     data = await state.get_data()
-    await rq.add_answer(tg_id=data["tg_id"],
+    await rq.add_answer(tg_id=data["user_id"],
                         tooth_id=data["tooth_id"],
                         label_id=data["label_id"])
     new_tooth_id = int(data["tooth_id"]) + 1
-    await rq.set_user_current_tooth_id(tg_id=data["tg_id"],
+    await state.update_data(tooth_id=new_tooth_id)
+    await rq.set_user_current_tooth_id(tg_id=data["user_id"],
                                        tooth_id=new_tooth_id)
     await callback.message.edit_reply_markup(reply_markup=None)
     await state.set_state(Labelling.waiting_expert_command)
@@ -64,3 +69,30 @@ async def go_back(callback: CallbackQuery, state: FSMContext):
     'Выберите подходящий вариант разметки.',
                                 reply_markup=await kb.show_labels())
 
+
+@expert_router.callback_query(Labelling.waiting_expert_command, 
+                       F.data == "end_labelling")
+async def end_labelling(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_reply_markup(reply_markup=None)
+    await callback.message.answer(text="Разметка завершена.")
+    await callback.message.answer("Выберите команду.",
+                         reply_markup=kb.expert_commands)
+    
+
+@expert_router.callback_query(Labelling.waiting_expert_command, 
+                       F.data == "label_next")
+async def label_next(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_reply_markup(reply_markup=None)
+    await state.set_state(Labelling.waiting_label)
+    data = await state.get_data()
+    tooth_file_path = await rq.get_tooth(data["tooth_id"])
+
+    await state.update_data(tg_id=data["user_id"],
+                            tooth_id=data["tooth_id"])
+
+    photo = FSInputFile(tooth_file_path)
+    await callback.message.answer_photo(photo=photo,
+                                caption=f'Снимок №{data["tooth_id"]}.\n' \
+    'Выберите подходящий вариант разметки.',
+                                reply_markup=await kb.show_labels())    
+    

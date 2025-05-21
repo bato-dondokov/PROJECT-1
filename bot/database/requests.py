@@ -4,6 +4,15 @@ from sqlalchemy import select, update
 import os
 
 
+async def check_user(tg_id, status):
+    async with async_session() as session:
+        is_user_exist = True
+        user = await session.scalar(select(User).where(User.tg_id == tg_id, User.status == status))    
+        if not user:
+            is_user_exist = False
+        return is_user_exist
+
+
 async def set_user(tg_id, name, status):
     async with async_session() as session:
         user = await session.scalar(select(User).where(User.tg_id == tg_id, User.status == status))
@@ -26,12 +35,13 @@ async def set_user_current_tooth_id(tg_id, tooth_id):
         await session.commit() 
 
 
-
 async def get_tooth(tooth_id):
     async with async_session() as session:
         tooth_file_path = await session.scalar(select(Tooth.file_name).where(Tooth.id == tooth_id))
         if tooth_file_path:
             return tooth_file_path
+        else:
+            return False
         
 
 async def get_labels():

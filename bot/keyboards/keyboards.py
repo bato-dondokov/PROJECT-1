@@ -34,14 +34,15 @@ go_back = ReplyKeyboardMarkup(keyboard=[
     resize_keyboard=True,)
 
 
-start_labelling = ReplyKeyboardMarkup(keyboard=[
+expert_commands = ReplyKeyboardMarkup(keyboard=[
     [KeyboardButton(text="Начать разметку")]],
     resize_keyboard=True,)
 
 
-label_next = ReplyKeyboardMarkup(keyboard=[
-    [KeyboardButton(text="Разметить следующий снимок")]],
-    resize_keyboard=True,)
+label_next = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text="Разметить следующий снимок", callback_data="label_next")],
+    [InlineKeyboardButton(text="Завершить разметку", callback_data="end_labelling")]
+])
 
 async def show_labels():
     labels = await get_labels()
