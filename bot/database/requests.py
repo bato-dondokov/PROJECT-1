@@ -81,12 +81,12 @@ async def add_teeth(teeth_dir, xray_name, xray_path):
         await session.commit() 
 
 
-async def add_answer(tg_id, tooth_id, label_id):
+async def add_answer(tg_id, tooth_id, label_ids):
     async with async_session() as session:
         is_answer_exist = await session.scalar(select(Answer).where(Answer.tooth_id == tooth_id))
         user_id = await session.scalar(select(User.id).where(User.tg_id == tg_id, User.status == "Эксперт"))
         if not is_answer_exist and user_id:
             session.add(Answer(user_id=user_id, 
                                tooth_id=tooth_id, 
-                               label_id=label_id))
+                               label_ids=label_ids))
             await session.commit()

@@ -46,7 +46,7 @@ class Answer(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
     tooth_id: Mapped[int] = mapped_column(ForeignKey('teeth.id'))
-    label_id: Mapped[int] = mapped_column(ForeignKey('labels.id'))
+    label_ids: Mapped[str] = mapped_column(String(255)) 
     # TODO: add datetime
 
 

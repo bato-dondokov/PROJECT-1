@@ -44,9 +44,14 @@ label_next = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="Завершить разметку", callback_data="end_labelling")]
 ])
 
-async def show_labels():
+async def show_labels(selected):
     labels = await get_labels()
     keyboard = InlineKeyboardBuilder()
     for label in labels:
-        keyboard.add(InlineKeyboardButton(text=label.name, callback_data=f'label_{label.id}_{label.name}'))
+        is_selected = "✅" if str(label.id) in selected else ""
+        keyboard.add(InlineKeyboardButton(text=f"{is_selected} {label.name}", 
+                                          callback_data=f'label_{label.id}_{label.name}'))
+    if selected:
+        keyboard.add(InlineKeyboardButton(text="Потдвердить", 
+                                          callback_data="label_confirm"))
     return keyboard.adjust(1).as_markup()
