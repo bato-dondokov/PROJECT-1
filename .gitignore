@@ -5,6 +5,7 @@ detection/xrays
 detection/teeth_img
 
 bot/config.py
+bot/db.sqlite3
 
 **/__pycache__/
 .DS_Store
