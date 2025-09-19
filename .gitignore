@@ -1,11 +1,11 @@
-detection/datasets
-detection/np_data
-detection/np_data_train
-detection/xrays
-detection/teeth_img
+detection/
+test/
 
 bot/config.py
 bot/db.sqlite3
+bot/xrays
+bot/teeth
+bot/.env
 
 **/__pycache__/
 .DS_Store

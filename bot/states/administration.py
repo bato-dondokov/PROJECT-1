@@ -1,6 +1,9 @@
 from aiogram.fsm.state import State, StatesGroup
 
 
+"""Состояния для обработки сообщений Администратора"""
+
+
 class Administration(StatesGroup):
     waiting_admin_command = State()
     waiting_new_label_class = State()

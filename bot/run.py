@@ -8,6 +8,10 @@ from handlers import auth_router, expert_router, admin_router
 from database.models import async_main
 
 
+"""Скрипт для запуска бота"""
+
+
+"""Определяет команды по умолчанию"""
 async def set_default_commands(bot: Bot):
     commands = [
         BotCommand(command="/start", description="Запустить бота"),
@@ -16,6 +20,7 @@ async def set_default_commands(bot: Bot):
     await bot.set_my_commands(commands)
 
 
+"""Запускает бота и БД"""
 async def main():
     await async_main()
     bot = Bot(token=TOKEN)
