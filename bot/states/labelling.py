@@ -6,7 +6,5 @@ from aiogram.fsm.state import State, StatesGroup
 
 class Labelling(StatesGroup):
     waiting_expert_command = State()
-    waiting_label = State()
+    labelling = State()
     confirming_label = State()
-    waiting_recommendation = State()
-    confirming_rec = State()

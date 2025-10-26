@@ -13,19 +13,14 @@ class Xray2Teeth():
     """
 
 
-    def __init__(self, xray_file, teeth_dir, model):
+    def __init__(self, model_path):
         """
         Создает экземпляр класса
 
         Args:
-            xray_file (str): Путь до рентгеновского снимка.
-            teeth_dir (str): Путь для изображений обнаруженных зубов
-            model (ultralytics.models.yolo.model.YOLO): Модель обнаружения.
+            model_path (str): Путь до модели обнаружения.
         """
-        self.XRAY_FILE = xray_file
-        self.XRAY_IMG = cv2.imread(self.XRAY_FILE)
-        self.TEETH_DIR = teeth_dir
-        self.MODEL = model
+        self.MODEL = YOLO(model_path)
 
 
     def get_obbs(self, model, xray_file, xray_shape):
@@ -92,7 +87,7 @@ class Xray2Teeth():
         y1 = center[1] - length // 2
         y2 = y1 + length
         cropped_xray = xray[y1:y2, x1:x2]
-        print(x1, x2, y1, y2)
+        # print(x1, x2, y1, y2)
         return cropped_xray
 
 
@@ -106,6 +101,7 @@ class Xray2Teeth():
                 4) Сохраняет полученные изображения.
 
             """
+            self.XRAY_IMG = cv2.imread(self.XRAY_FILE)
             xray_shape = np.array(self.XRAY_IMG.shape)[1::-1]
             obbs = self.get_obbs(self.MODEL, self.XRAY_FILE, xray_shape)
             for i, obb in enumerate(obbs):
@@ -143,3 +139,4 @@ class Xray2Teeth():
                 obb_cropped_file_name = os.path.join(obbs_dir, f'{i}-cropped.png')
                 cv2.imwrite(obb_file_name, obb_img)
                 cv2.imwrite(obb_cropped_file_name, cropped_img)
+        else: print("Нет файла!")
