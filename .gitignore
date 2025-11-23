@@ -5,6 +5,7 @@ bot/db.sqlite3
 bot/xrays
 bot/teeth
 bot/.env
+bot/numbers.py
 
 **/__pycache__/
 .DS_Store

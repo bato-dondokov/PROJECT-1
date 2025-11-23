@@ -32,14 +32,17 @@ async def get_admin_command(message: Message, state: FSMContext):
     command = message.text
     if command == "Посмотреть прогресс экспертов":
         experts, progress = await rq.get_answers_count_by_user()
-        text = ""
-        for i, expert in enumerate(experts):
-            text += f"{i+1}. {expert[1]}: {expert[0]}\n"
-            bar = "█" * progress[i][0] + "—" * (10 - progress[i][0])
-            text += (f"Размечено: [{bar}]" 
-                     f"{round((expert[2] / progress[i][1]) * 100)}% "
-                     f"({expert[2]}/{progress[i][1]})\n\n")
-        await message.answer(text)
+        if experts and progress:
+            text = ""
+            for i, expert in enumerate(experts):
+                text += f"{i+1}. {expert[1]}: {expert[0]}\n"
+                bar = "█" * progress[i][0] + "—" * (10 - progress[i][0])
+                text += (f"Размечено: [{bar}]" 
+                        f"{round((expert[2] / progress[i][1]) * 100)}% "
+                        f"({expert[2]}/{progress[i][1]})\n\n")
+            await message.answer(text)
+        else:
+            await message.answer('Отсутствуют результаты разметки.')
         
     # if command == "Добавить класс разметки":
     #     await state.set_state(Administration.waiting_new_label_class)

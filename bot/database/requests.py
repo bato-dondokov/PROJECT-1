@@ -56,34 +56,32 @@ async def get_tooth_id(user_id, user_status):
     async with async_session() as session:
         if user_status == "Преподаватель":
             result = await session.scalars(
-                select(Tooth).order_by(desc(Tooth.complexity), Tooth.id))
+                select(Tooth.id).order_by(desc(Tooth.complexity), Tooth.id))
         else:
-            result = await session.scalars(select(Tooth)
+            result = await session.scalars(select(Tooth.id)
                 .where(Tooth.complexity == 0)
                 .order_by(desc(Tooth.complexity), Tooth.id))
-        teeth = result.all()
+        teeth_ids = result.all()
+        teeth_num = len(teeth_ids)
 
-        aa_teeth = await session.scalars(
+        if not teeth_ids:
+            return False, teeth_num
+
+        aa_teeth_ids = await session.scalars(
             select(Answer.tooth_id).where(
                 Answer.user_id == user_id)
         )
-        aa_teeth = (aa_teeth.all())
+        aa_teeth_ids = (aa_teeth_ids.all())
 
-        teeth_num = len(teeth)
+        if aa_teeth_ids:
+            aa_teeth_ids = set(aa_teeth_ids)
+            stack = [item for item in teeth_ids if item not in aa_teeth_ids]
 
-        if not teeth:
-            return False, teeth_num
-        if aa_teeth:
-            current_tooth_id = await session.scalars(select(Tooth.id)
-                .where(Tooth.id.not_in(aa_teeth))
-                .order_by(desc(Tooth.complexity), Tooth.id)
-            )
-            stack = current_tooth_id.all()
             if not stack:
                 return False, teeth_num
             return stack[0], teeth_num
         else:
-            return teeth[0].id, teeth_num
+            return teeth_ids[0], teeth_num
 
 
 async def get_tooth(tooth_id):
@@ -192,7 +190,8 @@ async def add_answer(tg_id, tooth_id, condition_id, pathology_id, rec_id, term_i
     """Добавляет результаты разметки в таблицу Answers"""
     async with async_session() as session:
         is_answer_exist = await session.scalar(select(Answer).where(
-            Answer.tooth_id == tooth_id
+            Answer.tooth_id == tooth_id,
+            Answer.user_id == tg_id
         ))
         if not is_answer_exist:
             session.add(Answer(
@@ -241,6 +240,9 @@ async def get_answers_count_by_user():
                     .where(Tooth.complexity == 0)
                     .order_by(desc(Tooth.complexity), Tooth.id))
         normal_teeth = len(normal_teeth.all())
+
+        if total_teeth < 1 or normal_teeth < 1:
+            return False, False
         
         progress = []
         for expert in experts:

@@ -1,7 +1,7 @@
 """Конфигурационный файл"""
 
 """Токен телеграмм-бота"""
-TOKEN="YOUR_TOKEN"  
+TOKEN="YOUR_TOKEN"
 
 """Путь до модели обнаружения объектов"""
 MODEL_WEIGHTS = "bot/models/YOLO11n-obb(main)/weights/best.pt"
@@ -16,8 +16,8 @@ TEETH_DIR = "bot/teeth/"
 DB_FILE = "bot/db.sqlite3"
 
 """Пароли для авторизации пользователей"""
-EXPERT_PASSWORD="YOUR_PASSWORD"  
-ADMIN_PASSWORD="YOUR_PASSWORD"    
+EXPERT_PASSWORD="YOUR_PASSWORD"
+ADMIN_PASSWORD="YOUR_PASSWORD"   
 
 """Этапы разметки"""
 STAGES = ['conditions', 
@@ -31,7 +31,7 @@ DEFAULT_CONDITIONS=[
     'Зуб ранее не лечен',
     'Пломба',
     'Коронка',
-    'Штифт'
+    'Штифт',
     'Вкладка',
     'Корневые каналы запломбирваны полностью',
     'Недостаточная обтурация корневых каналов',
