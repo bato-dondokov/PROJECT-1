@@ -32,14 +32,14 @@ async def get_admin_command(message: Message, state: FSMContext):
     command = message.text
     if command == "Посмотреть прогресс экспертов":
         experts, progress = await rq.get_answers_count_by_user()
-        if experts and progress:
+        if experts:
             text = ""
             for i, expert in enumerate(experts):
                 text += f"{i+1}. {expert[1]}: {expert[0]}\n"
-                bar = "█" * progress[i][0] + "—" * (10 - progress[i][0])
+                bar = "█" * int(expert[2]) + "—" * (10 - int(expert[2]))
                 text += (f"Размечено: [{bar}]" 
-                        f"{round((expert[2] / progress[i][1]) * 100)}% "
-                        f"({expert[2]}/{progress[i][1]})\n\n")
+                        f"{round((expert[2]) * 10)}%\n\n ")
+                        # f"({expert[2]}/{progress[i][1]})\n\n")
             await message.answer(text)
         else:
             await message.answer('Отсутствуют результаты разметки.')

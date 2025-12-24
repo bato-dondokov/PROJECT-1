@@ -16,20 +16,20 @@ import os
 """Запросы в БД"""
 
 
-async def check_user(tg_id, role):
+async def get_user_id(tg_id, role):
     """
-    Возвращает True если существует пользователь с указанным tg_id, role 
+    Возвращает id если существует пользователь с указанным tg_id, role 
     в таблице Users, иначе возвращает False
     """
     async with async_session() as session:
-        user_status =  await session.scalar(select(User.status).where(
+        user_id =  await session.scalar(select(User.id).where(
             User.tg_id == tg_id, 
             User.role == role
         ))   
-        return user_status
+        return user_id if user_id else False
 
 
-async def set_user(tg_id, name, role, status=None):
+async def set_user(tg_id, name, role):
     """
     Добавляет нового пользователя в таблицу Users.
     """
@@ -42,46 +42,55 @@ async def set_user(tg_id, name, role, status=None):
             session.add(User(
                 tg_id=tg_id, 
                 name=name, 
-                role=role, 
-                status=status
+                role=role
             ))
             await session.commit()
 
 
-async def get_tooth_id(user_id, user_status):
+async def get_tooth_id(user_id, user_role, range_size=40):
     """
     Возвращает id последнего зуба, который разметил пользователь из 
     таблицы Users, и количество зубов в таблице Tooth.
     """
     async with async_session() as session:
-        if user_status == "Преподаватель":
+        start = ((user_id - 1) // 2) * range_size + 1
+        end = start + range_size -1
+        print('start:', start, 'end:', end)
+
+        if user_role == "Преподаватель":
             result = await session.scalars(
-                select(Tooth.id).order_by(desc(Tooth.complexity), Tooth.id))
+                select(Tooth.id).where(Tooth.id.between(start, end)).order_by(desc(Tooth.complexity), Tooth.id))
         else:
             result = await session.scalars(select(Tooth.id)
-                .where(Tooth.complexity == 0)
+                .where(Tooth.id.between(start, end))
                 .order_by(desc(Tooth.complexity), Tooth.id))
         teeth_ids = result.all()
         teeth_num = len(teeth_ids)
+        print('teeth_num:', teeth_num)
+        print('teeth_ids:', teeth_ids)
+        teeth_range = (start, teeth_ids[-1])
 
         if not teeth_ids:
-            return False, teeth_num
+            return False, teeth_num, teeth_range
 
         aa_teeth_ids = await session.scalars(
             select(Answer.tooth_id).where(
                 Answer.user_id == user_id)
         )
         aa_teeth_ids = (aa_teeth_ids.all())
+        print('aa_teeth_ids:', len(aa_teeth_ids))
+        print('aa_teeth_ids:', aa_teeth_ids)
 
         if aa_teeth_ids:
             aa_teeth_ids = set(aa_teeth_ids)
             stack = [item for item in teeth_ids if item not in aa_teeth_ids]
+            print('stack:', stack)
 
             if not stack:
-                return False, teeth_num
-            return stack[0], teeth_num
+                return False, teeth_num, teeth_range
+            return stack[0], teeth_num, teeth_range
         else:
-            return teeth_ids[0], teeth_num
+            return teeth_ids[0], teeth_num, teeth_range
 
 
 async def get_tooth(tooth_id):
@@ -186,16 +195,16 @@ async def add_teeth(teeth_dir, xray_name, xray_path):
         await session.commit() 
 
 
-async def add_answer(tg_id, tooth_id, condition_id, pathology_id, rec_id, term_id):
+async def add_answer(user_id, tooth_id, condition_id, pathology_id, rec_id, term_id):
     """Добавляет результаты разметки в таблицу Answers"""
     async with async_session() as session:
         is_answer_exist = await session.scalar(select(Answer).where(
             Answer.tooth_id == tooth_id,
-            Answer.user_id == tg_id
+            Answer.user_id == user_id
         ))
         if not is_answer_exist:
             session.add(Answer(
-                user_id=tg_id, 
+                user_id=user_id, 
                 tooth_id=tooth_id, 
                 condition_id=condition_id,
                 pathology_id=pathology_id,
@@ -225,29 +234,42 @@ async def get_answers_count_by_user():
             .subquery()
             
         experts = await session.execute(
-            select(User.name, User.status, subquery.c.count)
-            .join(subquery, User.tg_id == subquery.c.user_id)
-            .where(User.status.in_(['Преподаватель', 'Ординатор']))
-            .order_by(User.status)
+            # select(User.name, User.role, subquery.c.count)
+            select(User.name, User.role, User.progress)
+            .join(subquery, User.id == subquery.c.user_id)
+            .where(User.role.in_(['Преподаватель', 'Ординатор']))
+            .order_by(User.role)
         )
         experts = experts.all()
 
-        total_teeth = await session.scalars(
-                    select(Tooth).order_by(desc(Tooth.complexity), Tooth.id))
-        total_teeth = len(total_teeth.all())
+        # total_teeth = await session.scalars(
+        #             select(Tooth).order_by(desc(Tooth.complexity), Tooth.id))
+        # total_teeth = len(total_teeth.all())
     
-        normal_teeth = await session.scalars(select(Tooth)
-                    .where(Tooth.complexity == 0)
-                    .order_by(desc(Tooth.complexity), Tooth.id))
-        normal_teeth = len(normal_teeth.all())
+        # normal_teeth = await session.scalars(select(Tooth)
+        #             .where(Tooth.complexity == 0)
+        #             .order_by(desc(Tooth.complexity), Tooth.id))
+        # normal_teeth = len(normal_teeth.all())
 
-        if total_teeth < 1 or normal_teeth < 1:
-            return False, False
+        # if total_teeth < 1 or normal_teeth < 1:
+        #     return False, False
         
-        progress = []
-        for expert in experts:
-            if expert[1] == "Преподаватель":
-                progress.append([int(expert[2] / total_teeth * 10), total_teeth])
-            else:
-                progress.append([int(expert[2] / normal_teeth * 10), normal_teeth])
-        return experts, progress
+        # progress = []
+        # for expert in experts:
+        #     if expert[1] == "Преподаватель":
+        #         progress.append([int(expert[2] / total_teeth * 10), total_teeth])
+        #     else:
+        #         progress.append([int(expert[2] / normal_teeth * 10), normal_teeth])
+        # return experts, progress
+        return experts, None
+    
+
+async def save_progress(user_id, progress):
+    """
+    Сохраняет прогресс пользователя в разметке в таблице Users.
+    """
+    async with async_session() as session:
+        await session.execute(update(User).where(
+            User.id == user_id, 
+        ).values(progress=progress))
+        await session.commit()

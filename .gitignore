@@ -5,8 +5,9 @@ bot/db.sqlite3
 bot/xrays
 bot/teeth
 bot/.env
-bot/numbers.py
+bot/nnumbers.py
 
 **/__pycache__/
 .DS_Store
 .vscode
+bot.zip

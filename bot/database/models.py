@@ -32,7 +32,7 @@ class User(Base):
     tg_id = mapped_column(BigInteger)
     name: Mapped[str] = mapped_column(String(255))  
     role: Mapped[str] = mapped_column(String(25))
-    status: Mapped[str] = mapped_column(String(25))  
+    progress: Mapped[int] = mapped_column(default=0)
 
 
 class Condition(Base):

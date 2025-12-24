@@ -33,14 +33,19 @@ async def start_labelling(message: Message, state: FSMContext):
     """
     logger.info(f"Начинаю обработку")
     data = await state.get_data()
-    user_id = data["user_id"]
-    user_status = data["user_status"]
+    user_role = data["user_role"]
+    user_id = await rq.get_user_id(data['user_tg_id'], user_role)
+    await state.update_data(user_id=user_id)
+
     await state.set_state(Labelling.labelling)
 
-    current_tooth_id, teeth_num = await rq.get_tooth_id(user_id, user_status)
+
+    current_tooth_id, teeth_num, teeth_range = await rq.get_tooth_id(
+        user_id, user_role, 3)
 
     await state.update_data(tooth_id=current_tooth_id)
     await state.update_data(teeth_num=teeth_num)
+    await state.update_data(teeth_range=teeth_range)
 
     tooth_files, tooth_complexity = await rq.get_tooth(current_tooth_id)
     tooth_complexity_str = ""
@@ -58,10 +63,10 @@ async def start_labelling(message: Message, state: FSMContext):
         await message.answer('Отсутствуют данные для разметки.')
         return
 
-    if current_tooth_id > teeth_num:
-        await state.set_state(Labelling.waiting_expert_command)
-        await message.answer('Вы разметили все снимки.')
-        return
+    # if current_tooth_id > teeth_num:
+    #     await state.set_state(Labelling.waiting_expert_command)
+    #     await message.answer('Вы разметили все снимки.')
+    #     return
     
     
     await state.update_data(selected_id=0)
@@ -78,7 +83,8 @@ async def start_labelling(message: Message, state: FSMContext):
     instruction = get_instructions('conditions')
     await message.answer(
         text=(
-            f'Снимок {tooth_complexity_str} №{current_tooth_id} из {teeth_num}.\n'
+            f'Ваш диапазон разметки: с {teeth_range[0]} по {teeth_range[1]} '
+            f'снимок.\nСнимок {tooth_complexity_str} №{current_tooth_id}.\n'
             f'{instruction}'
         ),
         reply_markup=await kb.show_labels('conditions', 0)
@@ -167,7 +173,7 @@ async def confirm_label(callback: CallbackQuery, state: FSMContext):
         selected = data["selected"]
 
         await rq.add_answer(
-            tg_id=user_id,
+            user_id=user_id,
             tooth_id=tooth_id,
             condition_id=selected[0],
             pathology_id=selected[1],
@@ -180,13 +186,15 @@ async def confirm_label(callback: CallbackQuery, state: FSMContext):
         await callback.message.edit_reply_markup(reply_markup=None)
         await state.set_state(Labelling.waiting_expert_command)
         teeth_num = data["teeth_num"]
-        progress = int(tooth_id / teeth_num * 10)
-        bar = "█" * progress + "—" * (10 - progress)
+        teeth_range = data["teeth_range"]   
+        progress = (tooth_id - teeth_range[0]+1) / teeth_num * 10
+        await rq.save_progress(user_id, progress)
+        bar = "█" * int(progress) + "—" * (10 - int(progress))
         text = (
-            f'Снимок {data["tooth_complexity_str"]} №{data["tooth_id"]} из '
-            f'{teeth_num}.\n'
+            f'Ваш диапазон разметки: с {teeth_range[0]} по {teeth_range[1]}.\n'
+            f'Снимок {data["tooth_complexity_str"]} №{data["tooth_id"]}.\n'
             f'Разметка успешно добавлена.\n'
-            f'Размечено: [{bar}] {round((tooth_id / teeth_num) * 100)}%'
+            f'Размечено: [{bar}] {round(progress * 10)}%'
         )
         await callback.message.answer(
             text=text,

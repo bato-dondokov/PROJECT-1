@@ -28,7 +28,9 @@ contact_keyboard = ReplyKeyboardMarkup(
 
 """ReplyKeyboard клавиатура для выбора роли пользователя."""
 role_keyboard = ReplyKeyboardMarkup(
-    keyboard=[[KeyboardButton(text='Эксперт'), KeyboardButton(text='Админ')]],
+    keyboard=[[KeyboardButton(text='Преподаватель')],
+              [KeyboardButton(text='Ординатор')], 
+              [KeyboardButton(text='Админ')]],
     resize_keyboard=True,
     input_field_placeholder='Выберите вашу роль.'
 )

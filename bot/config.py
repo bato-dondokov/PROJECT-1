@@ -16,8 +16,9 @@ TEETH_DIR = "bot/teeth/"
 DB_FILE = "bot/db.sqlite3"
 
 """Пароли для авторизации пользователей"""
-EXPERT_PASSWORD="YOUR_PASSWORD"
-ADMIN_PASSWORD="YOUR_PASSWORD"   
+RESIDENT_PASSWORD="YOUR_PASSWORD"
+TEACHER_PASSWORD="YOUR_PASSWORD" 
+ADMIN_PASSWORD="YOUR_PASSWORD" 
 
 """Этапы разметки"""
 STAGES = ['conditions', 
@@ -60,6 +61,7 @@ DEFAULT_PATHOLOGIES=[
 """Названия рекомендаций по умолчанию"""
 DEFAULT_RECOMMENDATIONS=[
     'Сомневаюсь в ответе',
+    'Провести экструзию',
     'Провести пломбирование',
     'Провести эндодонтическое лечение',
     'Провести протезирование',
@@ -84,6 +86,9 @@ DEFAULT_TERMS=[
 PHONE_NUMBERS = [
     "YOUR_NUMBERS"
 ]
+
+"""ID телеграмм пользователя для получения дампа БД"""
+DUMP_TG_ID = "YOUR_TG_ID"
 
 """Коэффициенты для обрезки снимка."""
 OBB_SCALE = 2.0 # Масштаб увеличения размеров ограничивающей рамки

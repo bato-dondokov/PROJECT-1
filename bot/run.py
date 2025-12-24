@@ -2,9 +2,10 @@ import os
 import asyncio
 import logging
 from aiogram import Bot, Dispatcher
-from aiogram.types import BotCommand
+from aiogram.types import BotCommand, FSInputFile
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from config import TOKEN
+from config import TOKEN, DUMP_TG_ID
 from handlers import auth_router, expert_router, admin_router
 from database.models import async_main
 from queue_manager import model_worker
@@ -30,15 +31,37 @@ async def set_default_commands(bot: Bot):
     await bot.set_my_commands(commands)
 
 
+async def send_file(bot: Bot):
+    """Отправляет файл БД в указанный чат"""
+    file = FSInputFile("bot/db.sqlite3")
+    await bot.send_document(
+        chat_id=DUMP_TG_ID,
+        document=file,
+        caption="Ежедневный дамп базы данных."
+    )
+
+
 async def main():
     """Запускает бота и БД"""
     await async_main()
     create_data_dir()
     bot = Bot(token=TOKEN)
     dp = Dispatcher()
+
+    scheduler = AsyncIOScheduler(timezone="Europe/Moscow")
+    scheduler.add_job(
+        send_file,
+        trigger="cron",
+        hour=18,
+        minute=0,
+        args=[bot]
+    )
+    scheduler.start()
+
     dp.include_router(auth_router)
     dp.include_router(expert_router)
     dp.include_router(admin_router)
+
     await set_default_commands(bot)
     asyncio.create_task(model_worker(bot))
     await dp.start_polling(bot)
