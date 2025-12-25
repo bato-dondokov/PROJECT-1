@@ -11,3 +11,7 @@ class Administration(StatesGroup):
     waiting_new_xray = State()
     confirming_new_xray = State()
     exporting_db = State()
+    waiting_new_access_number = State()
+    confirming_new_access_number = State()
+    waiting_new_access_number_table = State()
+    confirming_new_access_number_table = State()

@@ -50,6 +50,8 @@ admin_commands = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text='Посмотреть прогресс экспертов')],
         [KeyboardButton(text="Добавить снимок")],
+        [KeyboardButton(text="Добавить номер для доступа")],
+        [KeyboardButton(text="Добавить таблицу с номерами для доступа")],
         [KeyboardButton(text="Выгрузить БД")]
     ],
     resize_keyboard=True,

@@ -26,6 +26,9 @@ STAGES = ['conditions',
           'recommendations', 
           'terms']
 
+"""Диапазон разметки (количество снимков за сессию)"""
+ANNOTATION_RANGE = 40
+
 """Названия исходных состояний по умолчанию"""
 DEFAULT_CONDITIONS=[
     'Сомневаюсь в ответе',
@@ -83,9 +86,7 @@ DEFAULT_TERMS=[
 ]
 
 """Список номеров, у которых есть доступ к боту"""
-PHONE_NUMBERS = [
-    "YOUR_NUMBERS"
-]
+DEFAULT_ACCESSED_PHONE_NUMBER = ['name', 'phone_number']
 
 """ID телеграмм пользователя для получения дампа БД"""
 DUMP_TG_ID = "YOUR_TG_ID"

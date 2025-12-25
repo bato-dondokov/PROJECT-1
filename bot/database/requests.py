@@ -273,3 +273,29 @@ async def save_progress(user_id, progress):
             User.id == user_id, 
         ).values(progress=progress))
         await session.commit()
+
+
+async def add_access_number(fio, phone_number):
+    """Добавляет новый номер для доступа в таблицу AccessNumbers"""
+    from database.models import AccessNumber
+    async with async_session() as session:
+        is_number_exist = await session.scalar(select(AccessNumber).where(
+            AccessNumber.phone_number == phone_number
+        ))
+
+        if not is_number_exist:
+            session.add(AccessNumber(
+                fio=fio,
+                phone_number=phone_number
+            ))
+            await session.commit()
+
+
+async def check_access_number(phone_number):
+    """Проверяет наличие номера в таблице AccessNumbers"""
+    from database.models import AccessNumber
+    async with async_session() as session:
+        is_number_exist = await session.scalar(select(AccessNumber).where(
+            AccessNumber.phone_number == phone_number
+        ))
+        return True if is_number_exist else False

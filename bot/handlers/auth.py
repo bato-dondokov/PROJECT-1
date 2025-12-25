@@ -11,8 +11,7 @@ from states.administration import Administration
 from config import (
     RESIDENT_PASSWORD, 
     TEACHER_PASSWORD,
-    ADMIN_PASSWORD, 
-    PHONE_NUMBERS
+    ADMIN_PASSWORD
 )
 from messages import (
     AUTH_INSTRUCTIONS, 
@@ -65,7 +64,9 @@ async def check_contact(message: Message, state: FSMContext):
     """
     contact = message.contact
     phone = contact.phone_number
-    if phone in PHONE_NUMBERS:
+    number_is_accessed = await rq.check_access_number(phone)
+
+    if number_is_accessed:
         await message.answer(
             text=CORRECT_NUMBER_MESSAGE,
             reply_markup=kb.role_keyboard

@@ -6,6 +6,7 @@ bot/xrays
 bot/teeth
 bot/.env
 bot/nnumbers.py
+bot/config3.py
 
 **/__pycache__/
 .DS_Store

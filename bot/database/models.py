@@ -10,7 +10,8 @@ from config import (
     DEFAULT_CONDITIONS, 
     DEFAULT_PATHOLOGIES,
     DEFAULT_RECOMMENDATIONS,
-    DEFAULT_TERMS
+    DEFAULT_TERMS,
+    DEFAULT_ACCESSED_PHONE_NUMBER
 )
 
 
@@ -108,6 +109,7 @@ async def async_main():
         is_pathologies_exist = await session.scalar(select(Pathology).limit(1))
         is_conditions_exist = await session.scalar(select(Condition).limit(1))
         is_terms_exist = await session.scalar(select(Term).limit(1))
+        is_accessed_numbers_exist = await session.scalar(select(AccessNumber).limit(1))
 
         if not is_conditions_exist:
             conditions = DEFAULT_CONDITIONS
@@ -136,3 +138,19 @@ async def async_main():
                 session.add(Term(name=term))
             await session.commit() 
             print('Default terms added')
+        if not is_accessed_numbers_exist:
+            session.add(AccessNumber(
+                fio=DEFAULT_ACCESSED_PHONE_NUMBER[0], 
+                phone_number=DEFAULT_ACCESSED_PHONE_NUMBER[1]
+            ))
+            await session.commit()
+            print('Default access number added')
+
+
+class AccessNumber(Base):
+    """Модель таблицы для номеров доступа."""
+    __tablename__ = "access_numbers"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    fio: Mapped[str] = mapped_column(String(255))  
+    phone_number: Mapped[str] = mapped_column(String(20))

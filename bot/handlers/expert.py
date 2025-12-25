@@ -13,7 +13,7 @@ import database.requests as rq
 from states.labelling import Labelling
 from messages import get_instructions
 from logger import logger
-from config import STAGES
+from config import STAGES, ANNOTATION_RANGE
 
 expert_router = Router()
 
@@ -41,7 +41,7 @@ async def start_labelling(message: Message, state: FSMContext):
 
 
     current_tooth_id, teeth_num, teeth_range = await rq.get_tooth_id(
-        user_id, user_role, 3)
+        user_id, user_role, ANNOTATION_RANGE)
 
     await state.update_data(tooth_id=current_tooth_id)
     await state.update_data(teeth_num=teeth_num)
